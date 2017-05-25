@@ -44,9 +44,6 @@ public:
 	/* 아웃라인 및 드랍 아이템 체크 콜러더 */
 	UPROPERTY(EditDefaultsOnly)
 	class USphereComponent* OutlineAreaColl;
-	/* 공격 가능 범위 콜리더 */
-	UPROPERTY(EditDefaultsOnly)
-	class UCapsuleComponent* AttackColl;
 
 	/* 이동 속도 및 회전 속도 */
 	UPROPERTY(EditAnywhere, Category = Movement)
@@ -69,10 +66,6 @@ public:
 	float Radius;
 	UPROPERTY(EditAnywhere, Category = WanderVariable)
 	float Rate;
-
-	/* 공격 가능 여부 변수 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	bool IsAttack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DestoryTime;
@@ -102,26 +95,20 @@ protected:
 	void StateWander(float DeltaTime);
 	/* 공격 상태 */
 	void SetAttack();
+	bool IsAttack();
 	/* 이동 방향 반환 */
 	FVector GetSteering();
 	/* 타겟을 향해 회전 */
-	void LookAtTarget(FVector TargetLocation, float DeltaTime);
+	void LookAtTarget(const FVector TargetLocation, float DeltaTime);
 	/* 타겟으로 부터의 정면 방향 반환 */
-	FVector GetDirection(float Orientation);
+	FVector GetDirection(const float Orientation);
 	/* 타겟을 추격하도록 타겟 위치 반환 */
 	FVector SetTrace(FVector TargetVec) const;
 	/* 데미지 받음 */
-	void AddDamage(float Damage);
+	void AddDamage(const float Damage);
 	/* 오브젝트 삭제 */
 	void SetDestroy();
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-	
-	UFUNCTION()
-	void OnOverlapAttack(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-	UFUNCTION()
-	void OnOverlapAttackEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
 };

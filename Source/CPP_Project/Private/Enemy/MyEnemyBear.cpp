@@ -14,7 +14,6 @@ AMyEnemyBear::AMyEnemyBear()
 	PrimaryActorTick.bCanEverTick = true;
 
 	CurrentHp = 100.0f;
-	IsAttack = false;
 
 	// 추격 변수들
 	MoveSpeed = 300.0f;
@@ -35,6 +34,7 @@ AMyEnemyBear::AMyEnemyBear()
 	NearDistance = 1400.0f;
 	FarDistance = 1500.0f;
 	AttackDistance = 200.0f;
+	BearState = EMyBearState::Idle;
 
 	// 캡슐 컬리더 설정
 	BodyColl = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collision"));
@@ -48,18 +48,8 @@ AMyEnemyBear::AMyEnemyBear()
 	/* 드랍 가능 및 아웃라인 표시할 스피어 콜리더 설정 */
 	OutlineAreaColl = CreateDefaultSubobject<USphereComponent>(TEXT("Shpere Collision"));
 	OutlineAreaColl->SetSphereRadius(100.0f);
-	OutlineAreaColl->AttachTo(RootComponent);
 	OutlineAreaColl->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapBegin);
-
-	/* 공격 가능 범위 체크할 캡슐 콜리더 설정 */
-	AttackColl = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Attack Area"));
-	/*AttackColl->SetCapsuleHalfHeight(130.0f);
-	AttackColl->SetCapsuleRadius(80.0f);
-	AttackColl->SetRelativeLocationAndRotation(FVector(0, 0, 0), FRotator(90.0f, 0, 0));
-	AttackColl->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapAttack);
-	AttackColl->OnComponentEndOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapAttackEnd);*/
-	AttackColl->AttachTo(BodyColl);
-
+	OutlineAreaColl->SetupAttachment(RootComponent);
 
 	// 스켈레탈 메쉬 설정
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_Mesh(
@@ -91,23 +81,25 @@ void AMyEnemyBear::Tick( float DeltaTime )
 	// 플레이어와의 거리 구하기
 	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
 	float Distance = GetDistanceTo(Character);
-
 	// 체력이 0 이상일 시 상태 변경
 	if (CurrentHp > 0.0f) {
 		// 공격 위치에 들어왔을 시
-		if (Distance <= AttackDistance && IsAttack)
+		if (Distance <= AttackDistance && IsAttack())
 		{
+			UE_LOG(LogClass, Warning, TEXT("Attack"));
 			BearState = EMyBearState::Attack;
 			SetAttack();
 		}
 		// 멀리 떨어졌을 시
 		else if (Distance > NearDistance) {
+			UE_LOG(LogClass, Warning, TEXT("Wander"));
 			BearState = EMyBearState::Move;
 			StateWander(DeltaTime);
 		}
 		// 추격 위치에 들어왔을 시
 		else if (Distance < NearDistance)
 		{
+			UE_LOG(LogClass, Warning, TEXT("Move"));
 			BearState = EMyBearState::Move;
 			SetArrive(DeltaTime);
 		}
@@ -139,10 +131,13 @@ void AMyEnemyBear::SetArrive(float DeltaTime)
 	// 캐릭터의 위치를 구함.
 	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
 	FVector TraceVec = SetTrace(Character->GetActorLocation());
-	LookAtTarget(TraceVec, DeltaTime);
+	//LookAtTarget(TraceVec, DeltaTime);
 
+
+	FVector Dir = Character->GetActorLocation() - GetActorLocation();
+	Dir.Normalize();
 	// 정면으로 이동
-	BearMoveComp->AddInputVector(GetActorForwardVector() * MoveSpeed * DeltaTime);
+	BearMoveComp->AddInputVector(Dir * MoveSpeed * DeltaTime);
 }
 
 void AMyEnemyBear::SetAttack()
@@ -150,7 +145,22 @@ void AMyEnemyBear::SetAttack()
 	UE_LOG(LogClass, Warning, TEXT("Attack!!"));
 }
 
-void AMyEnemyBear::LookAtTarget(FVector TargetLocation, float DeltaTime)
+bool AMyEnemyBear::IsAttack()
+{
+	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);;
+	//float Dir = GetDotProductTo(Character);
+	// 캐릭터와의 각도를 구함 (0 ~ 1 사이)
+	const FVector ForwardVec = GetActorForwardVector();
+	FVector TargetOffset = Character->GetActorLocation() - GetActorLocation();
+	TargetOffset = TargetOffset.GetSafeNormal();
+	float Angle = FVector::DotProduct(ForwardVec, TargetOffset);
+
+	if (Angle >= 0.8f) { return true; }
+
+	return false;
+}
+
+void AMyEnemyBear::LookAtTarget(const FVector TargetLocation, float DeltaTime)
 {
 	// 캐릭터와의 거리를 구함
 	// Atan2()를 사용하여 Y, X 두방향의 각도를 구함 
@@ -219,7 +229,7 @@ void AMyEnemyBear::StateWander(float DeltaTime)
 	BearMoveComp->AddInputVector(Direction * MoveSpeed * DeltaTime);
 }
 
-FVector AMyEnemyBear::GetDirection(float Orientation)
+FVector AMyEnemyBear::GetDirection(const float Orientation)
 {
 	// 타겟의 방향을 구하고 반환함
 	FVector NewVector = FVector::ZeroVector;
@@ -253,7 +263,7 @@ FVector AMyEnemyBear::SetTrace(FVector TargetVec) const
 	}
 }
 
-void AMyEnemyBear::AddDamage(float Damage)
+void AMyEnemyBear::AddDamage(const float Damage)
 {
 	// 체력 삭감 및 체력에 0 이하시 사망 상태 변경
 	CurrentHp -= Damage;
@@ -283,29 +293,6 @@ void AMyEnemyBear::OnOverlapBegin(UPrimitiveComponent * OverlappedComp, AActor *
 			AAProjectile* Projectile = Cast<AAProjectile>(OtherActor);
 			AddDamage(Projectile->Damage);
 		}
-	}
-}
-
-void AMyEnemyBear::OnOverlapAttack(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
-{
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
-	{
-		// 플레이어가 공격 범위에 들어왔을 시 공격 실행
-		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OtherActor);
-		if (Character)
-		{
-			IsAttack = true;
-		}
-		
-	}
-}
-
-void AMyEnemyBear::OnOverlapAttackEnd(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
-{
-	
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
-	{
-		UE_LOG(LogClass, Warning, TEXT("End Player Character !! "));
 	}
 }
 
