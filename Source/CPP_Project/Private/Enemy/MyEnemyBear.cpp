@@ -46,10 +46,16 @@ AMyEnemyBear::AMyEnemyBear()
 	RootComponent = BodyColl;
 
 	/* 드랍 가능 및 아웃라인 표시할 스피어 콜리더 설정 */
-	OutlineAreaColl = CreateDefaultSubobject<USphereComponent>(TEXT("Shpere Collision"));
-	OutlineAreaColl->SetSphereRadius(100.0f);
-	OutlineAreaColl->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapBegin);
-	OutlineAreaColl->SetupAttachment(RootComponent);
+	//OutlineAreaColl = CreateDefaultSubobject<USphereComponent>(TEXT("Shpere Collision"));
+	//OutlineAreaColl->SetSphereRadius(100.0f);
+	//OutlineAreaColl->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapBegin);
+	//OutlineAreaColl->SetupAttachment(RootComponent);
+
+	OutlineArea = CreateDefaultSubobject<USphereComponent>(TEXT("Outline Area"));
+	OutlineArea->SetSphereRadius(300.0f);
+	OutlineArea->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOutlineOverlapBegin);
+	OutlineArea->OnComponentEndOverlap.AddDynamic(this, &AMyEnemyBear::OnOurlineOverlapEnd);
+	OutlineArea->SetupAttachment(RootComponent);
 
 	// 스켈레탈 메쉬 설정
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> SK_Mesh(
@@ -86,20 +92,17 @@ void AMyEnemyBear::Tick( float DeltaTime )
 		// 공격 위치에 들어왔을 시
 		if (Distance <= AttackDistance && IsAttack())
 		{
-			UE_LOG(LogClass, Warning, TEXT("Attack"));
 			BearState = EMyBearState::Attack;
 			SetAttack();
 		}
 		// 멀리 떨어졌을 시
 		else if (Distance > NearDistance) {
-			UE_LOG(LogClass, Warning, TEXT("Wander"));
 			BearState = EMyBearState::Move;
 			StateWander(DeltaTime);
 		}
 		// 추격 위치에 들어왔을 시
 		else if (Distance < NearDistance)
 		{
-			UE_LOG(LogClass, Warning, TEXT("Move"));
 			BearState = EMyBearState::Move;
 			SetArrive(DeltaTime);
 		}
@@ -242,21 +245,21 @@ FVector AMyEnemyBear::GetDirection(const float Orientation)
 FVector AMyEnemyBear::SetTrace(FVector TargetVec) const
 {
 	// 좌측 트레이스 발사 위치들
-	const FVector LeftStart = (GetActorLocation() + GetActorRightVector() + 80.0f) + GetActorForwardVector()  * 50;
+	const FVector LeftStart = (GetActorLocation() + GetActorRightVector() + 80.0f) + GetActorForwardVector() * 50;
 	const FVector LeftEnd = (GetActorLocation() + GetActorRightVector() + 80.0f) + GetActorForwardVector() * 400;
 
 	// 우측 트레이스 발사 위치들
 	const FVector RightStart = (GetActorLocation() - GetActorRightVector() - 80.0f) + GetActorForwardVector() * 50;
 	const FVector RightEnd = (GetActorLocation() - GetActorRightVector() - 80.0f) + GetActorForwardVector() * 400;
-	
+
 	FHitResult Hit;
-	if (GetWorld()->LineTraceSingleByChannel(Hit, LeftStart, LeftEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)) || 
+	if (GetWorld()->LineTraceSingleByChannel(Hit, LeftStart, LeftEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)) ||
 		GetWorld()->LineTraceSingleByChannel(Hit, RightStart, RightEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)))
 	{
 		// 트레이서 충돌 시 충돌 위치에 방향과 200.0f 의 값을 더하여 반환
 		TargetVec = Hit.ImpactPoint + Hit.Normal * 200.0f;
 		return TargetVec;
-	}	
+	}
 	else
 	{
 		return TargetVec;
@@ -285,13 +288,39 @@ void AMyEnemyBear::SetDestroy()
 
 void AMyEnemyBear::OnOverlapBegin(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr)) 
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
 		// 죽음 상태가 아닐 때 발사체와 충돌시 체력 감소
 		if (OtherComp->GetName() == "ProjectileCollision" && BearState != EMyBearState::Die)
 		{
 			AAProjectile* Projectile = Cast<AAProjectile>(OtherActor);
 			AddDamage(Projectile->Damage);
+		}
+	}
+}
+
+void AMyEnemyBear::OnOutlineOverlapBegin(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+{
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
+	{
+		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OtherActor);
+		if (BearState == EMyBearState::Die && Character)
+		{
+			Character->IsDrop = true;
+			SkeletalMesh->SetRenderCustomDepth(true);
+		}
+	}
+}
+
+void AMyEnemyBear::OnOurlineOverlapEnd(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
+{
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
+	{
+		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OtherActor);
+		if (BearState == EMyBearState::Die && Character)
+		{
+			Character->IsDrop = false;
+			SkeletalMesh->SetRenderCustomDepth(false);
 		}
 	}
 }

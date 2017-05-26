@@ -20,7 +20,6 @@ void UWeapon::Initialize(APawn* pOwnerPawn, AActor* GetHUD)
 	OwnerPawn = pOwnerPawn;
 	CurrentAmmo = MaxAmmo;
 	HUD = Cast<AProjectHUD>(GetHUD);
-	HUD->GetCurrentAmmo(CurrentAmmo);
 }
 
 void UWeapon::UpdateWeapon(float DeltaSeconds)
@@ -33,7 +32,6 @@ void UWeapon::UpdateWeapon(float DeltaSeconds)
 			NextFire += FireInterval;
 			CurrentAmmo--;
 			ShotProjectile();
-			HUD->GetCurrentAmmo(CurrentAmmo);
 		}
 		else if (CurrentAmmo <= 0)
 		{
@@ -84,7 +82,6 @@ void UWeapon::StartReload()
 	if (CurrentWeaponState == EMyWeaponState::Reload)
 	{
 		CurrentAmmo = MaxAmmo;
-		HUD->GetCurrentAmmo(CurrentAmmo);
 		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OwnerPawn);
 		Character->AnimReload = false;
 		CurrentWeaponState = EMyWeaponState::Idle;

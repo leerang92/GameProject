@@ -17,7 +17,6 @@ public:
 	AProjectHUD();
 	virtual void BeginPlay() override;
 	virtual void DrawHUD() override;
-	void GetCurrentAmmo(int GetAmmo);
 
 protected:
 	UPROPERTY()
@@ -43,8 +42,6 @@ protected:
 	FCanvasIcon Inventory;
 	UPROPERTY()
 	FCanvasIcon WeaponIcon;
-
-	int CurrentAmmo;
 
 	void DrawHealth();
 

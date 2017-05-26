@@ -44,10 +44,6 @@ void AProjectHUD::DrawHUD()
 	DrawTime();
 }
 
-void AProjectHUD::GetCurrentAmmo(int GetAmmo)
-{
-	//CurrentAmmo = GetAmmo;
-}
 
 void AProjectHUD::DrawHealth()
 {
@@ -61,13 +57,12 @@ void AProjectHUD::DrawHealth()
 		Canvas->DrawIcon(HealthBarBg, HealthPosX, HealthPosY, ScaleUI);
 
 		const float HealthAmount = FMath::Min(1.0f, MyCharacter->CurrentHP / MyCharacter->GetMaxHP());
-
 		if (HealthAmount > 0.0f) {
 			FCanvasTileItem TileItem(FVector2D(HealthPosX, HealthPosY), HealthBar.Texture->Resource,
 				FVector2D(HealthBar.UL * HealthAmount * ScaleUI, HealthBar.VL * ScaleUI), FLinearColor::White);
+
 			MakeUV(HealthBar, TileItem.UV0, TileItem.UV1, HealthBar.U, HealthBar.V, HealthBar.UL * HealthAmount, HealthBar.VL);
 			TileItem.BlendMode = SE_BLEND_Translucent;
-
 			Canvas->DrawItem(TileItem);
 		}
 	}
@@ -103,10 +98,8 @@ void AProjectHUD::DrawAmmo()
 		Canvas->DrawIcon(WeaponIcon, WeaponImgPosX, WeaponImgPosY, ScaleUI * 2);
 
 		/* ÅºÈ¯ °¹¼ö ÅØ½ºÆ® ±×¸®±â */
-		ScaleUI *= 2.0f;
-		const float AmmoPosX = (Canvas->ClipX * ScaleUI) / 2;
-		const float AmmoPosY = Canvas->ClipY - (25.0f + HealthBarBg.VL) * ScaleUI;
-
+		//ScaleUI *= 2.0f;
+		
 		FString DrawText = FString::Printf(TEXT("%d / %d"), MyCharacter->GetCurrentAmmo(), MyCharacter->GetMaxAmmo());
 		//Canvas->SetDrawColor(FColor::White);
 		
@@ -115,9 +108,16 @@ void AProjectHUD::DrawAmmo()
 		float TextScale = 0.57f;
 		Canvas->StrLen(AmmoFont, DrawText, SizeX, SizeY);
 
+		const float TextOffsetY = 145.0f;
+		const float TextOffsetX = 50.0f;
+		const float AmmoPosX = ((Canvas->ClipX - TextOffsetX) + WeaponIcon.UL * ScaleUI) / 2;
+		const float AmmoPosY = Canvas->ClipY - Canvas->OrgY - ((WeaponIcon.VL + WeaponIcon.VL) / 2 + TextOffsetY) * ScaleUI;
+
+		ScaleUI *= 5;
 		TextItem.Text = FText::FromString(DrawText);
-		TextItem.Scale = FVector2D(TextScale * ScaleUI * 3, TextScale * ScaleUI * 3);
-		Canvas->DrawItem(TextItem, WeaponImgPosX + 150.0f, WeaponImgPosY + 35.0f);
+		TextItem.Scale = FVector2D(TextScale * ScaleUI, TextScale * ScaleUI);
+
+		Canvas->DrawItem(TextItem, AmmoPosX, AmmoPosY);
 	}
 }
 

@@ -66,6 +66,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurrentTime;
+	UPROPERTY(BlueprintReadWrite)
+	bool IsDrop;
 
 	UPROPERTY()
 	UWeapon* BasicWeapon;

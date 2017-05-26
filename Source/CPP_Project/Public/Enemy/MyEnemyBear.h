@@ -42,8 +42,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UCapsuleComponent* BodyColl;
 	/* 아웃라인 및 드랍 아이템 체크 콜러더 */
-	UPROPERTY(EditDefaultsOnly)
-	class USphereComponent* OutlineAreaColl;
+	//UPROPERTY(EditDefaultsOnly)
+	//class USphereComponent* OutlineAreaColl;
+	UPROPERTY(EditAnywhere)
+	class USphereComponent* OutlineArea;
 
 	/* 이동 속도 및 회전 속도 */
 	UPROPERTY(EditAnywhere, Category = Movement)
@@ -111,4 +113,8 @@ protected:
 
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnOutlineOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnOurlineOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

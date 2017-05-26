@@ -28,6 +28,7 @@ ACPP_ProjectCharacter::ACPP_ProjectCharacter()
 	AnimFire = false;
 	bRunning = false;
 	IsFire = true;
+	IsDrop = false;
 
 	// Ä¸½¶ ÄÄÆ÷³ÍÆ® Å©±â ¼³Á¤
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
