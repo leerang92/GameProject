@@ -134,13 +134,13 @@ void AMyEnemyBear::SetArrive(float DeltaTime)
 	// 캐릭터의 위치를 구함.
 	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
 	FVector TraceVec = SetTrace(Character->GetActorLocation());
-	//LookAtTarget(TraceVec, DeltaTime);
+	LookAtTarget(TraceVec, DeltaTime);
 
 
-	FVector Dir = Character->GetActorLocation() - GetActorLocation();
-	Dir.Normalize();
+	/*FVector Dir = Character->GetActorLocation() - GetActorLocation();
+	Dir.Normalize();*/
 	// 정면으로 이동
-	BearMoveComp->AddInputVector(Dir * MoveSpeed * DeltaTime);
+	BearMoveComp->AddInputVector(GetActorForwardVector() * MoveSpeed * DeltaTime);
 }
 
 void AMyEnemyBear::SetAttack()

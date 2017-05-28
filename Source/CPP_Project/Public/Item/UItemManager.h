@@ -6,6 +6,7 @@
 #include "BaseItem.h"
 #include "UItemManager.generated.h"
 
+/* 아이템 타입 */
 UENUM(BlueprintType)
 namespace EItemType
 {
@@ -17,6 +18,7 @@ namespace EItemType
 	};
 }
 
+/* 아이템 정보 구조체 */
 USTRUCT(BlueprintType)
 struct FItemStruct
 {
@@ -53,21 +55,28 @@ class CPP_PROJECT_API UUItemManager : public UObject
 
 	UUItemManager();
 
+	/* 인벤토리 리스트에 아이템 정보를 추가한다 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void AddInventoryList(TArray<FItemStruct> GetItemData);
 
+	/* 드랍한 아이템 리스트를 가져온다 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<FItemStruct> GetDropItem() const;
 
+	/* 인벤토리 아이템 리스트를 가져온다 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<FItemStruct> GetInventoryItem() const;
 
+	/* 아이템의 수량을 삭감한다 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void CutItemValue(FItemStruct GetItem);
+	void MinusItemNumber(FItemStruct GetItem);
 	
 protected:
+	/* 드랍 아이템들의 정보를 담는 배열 */
 	UPROPERTY()
 	TArray<FItemStruct> DropItem;
+
+	/* 인벤토리 아이템들의 정보를 담는 배열 */
 	UPROPERTY()
 	TArray<FItemStruct> InventoryItem;
 };

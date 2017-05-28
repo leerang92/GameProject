@@ -126,25 +126,21 @@ void AProjectHUD::DrawTime()
 	ACPP_ProjectCharacter* MyCharacter = Cast<ACPP_ProjectCharacter>(GetOwningPawn());
 	if (MyCharacter) {
 		float ScaleUI = Canvas->ClipY / 1080.0f;
-		ScaleUI *= 2.0f;
 
-		const float AmmoPosX = (Canvas->ClipX * ScaleUI) / 2;
-		const float AmmoPosY = Canvas->ClipY - (25.0f + HealthBarBg.VL) * ScaleUI;
 		FString DrawText = FString::Printf(TEXT("%f"), MyCharacter->CurrentTime);
-
 		FCanvasTextItem TextItem(FVector2D::ZeroVector, FText::GetEmpty(), AmmoFont, FColor::White);
 		float SizeX, SizeY;
 		float TextScale = 0.57f;
 		Canvas->StrLen(AmmoFont, DrawText, SizeX, SizeY);
 
-		const float OffsetX = -1300.0f;
-		const float OffsetY = 450.0f;
-		const float WeaponImgPosX = ((Canvas->ClipX - OffsetX) - WeaponIcon.UL * ScaleUI) / 2;
-		const float WeaponImgPosY = Canvas->ClipY - Canvas->OrgY - ((WeaponIcon.VL + WeaponIcon.VL) / 2 + OffsetY) * ScaleUI;
+		const float OffsetX = 100.0f;
+		const float OffsetY = 20.0f;
+		const float PositionX = Canvas->ClipX - OffsetX;
+		const float PositionY = OffsetY;
 
 		TextItem.Text = FText::FromString(DrawText);
 		TextItem.Scale = FVector2D(TextScale * ScaleUI * 3, TextScale * ScaleUI * 3);
-		Canvas->DrawItem(TextItem, WeaponImgPosX, WeaponImgPosY);
+		Canvas->DrawItem(TextItem, PositionX, PositionY);
 	}
 }
 

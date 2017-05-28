@@ -30,8 +30,22 @@ UUItemManager::UUItemManager()
 
 void UUItemManager::AddInventoryList(TArray<FItemStruct> GetItemData)
 {
-	for (int32 i = 0; i < GetItemData.Num(); ++i) {
+	for (int32 i = 0; i < GetItemData.Num(); ++i) 
+	{
 		InventoryItem.Add(GetItemData[i]);
+		//for (int32 j = 0; j < InventoryItem.Num(); ++j)
+		//{
+		//	UE_LOG(LogClass, Warning, TEXT(" GET ITEM "));
+		//	if (InventoryItem[j].Name == GetItemData[i].Name)
+		//	{
+		//		InventoryItem[j].Amount += GetItemData[i].Amount;
+		//		break;
+		//	}
+		//	else
+		//	{
+		//		
+		//	}
+		//}
 	}
 }
 
@@ -45,10 +59,13 @@ TArray<FItemStruct> UUItemManager::GetInventoryItem() const
 	return InventoryItem;
 }
 
-void UUItemManager::CutItemValue(FItemStruct GetItem)
+void UUItemManager::MinusItemNumber(FItemStruct GetItem)
 {
-	if (GetItem.Amount > 0) {
-		for (int32 i = 0; i < InventoryItem.Num(); ++i) {
+	// 선택된 아이템의 수량이 0이 아닐 시 반복문을 통해 선택된 아이템과 같은 아이템를 찾아 수량을 삭감
+	if (GetItem.Amount > 0) 
+	{	
+		for (int32 i = 0; i < InventoryItem.Num(); ++i) 
+		{
 			if (GetItem.Name == InventoryItem[i].Name)
 			{
 				InventoryItem[i].Amount--;
