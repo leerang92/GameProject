@@ -76,6 +76,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = State)
 	EMyBearState::Type GetBearState() const;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Weight;
 protected:
 	/* 상태 */
 	EMyBearState::Type BearState;
@@ -85,6 +87,7 @@ protected:
 	float SetOrientation;
 	float UpdateRotation;
 	float CurrentHp;
+
 	
 	/* 속도 */
 	FVector Velocity;

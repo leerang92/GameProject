@@ -36,6 +36,8 @@ AMyEnemyBear::AMyEnemyBear()
 	AttackDistance = 200.0f;
 	BearState = EMyBearState::Idle;
 
+	Weight = 20.0f;
+
 	// 캡슐 컬리더 설정
 	BodyColl = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule Collision"));
 	BodyColl->SetCapsuleHalfHeight(108.497429f);
@@ -45,12 +47,7 @@ AMyEnemyBear::AMyEnemyBear()
 	//CapsuleColl->SetSimulatePhysics(true);
 	RootComponent = BodyColl;
 
-	/* 드랍 가능 및 아웃라인 표시할 스피어 콜리더 설정 */
-	//OutlineAreaColl = CreateDefaultSubobject<USphereComponent>(TEXT("Shpere Collision"));
-	//OutlineAreaColl->SetSphereRadius(100.0f);
-	//OutlineAreaColl->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOverlapBegin);
-	//OutlineAreaColl->SetupAttachment(RootComponent);
-
+	// 아웃라인 및 드랍 가능 범위 컬리더 설정
 	OutlineArea = CreateDefaultSubobject<USphereComponent>(TEXT("Outline Area"));
 	OutlineArea->SetSphereRadius(300.0f);
 	OutlineArea->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOutlineOverlapBegin);
@@ -87,26 +84,38 @@ void AMyEnemyBear::Tick( float DeltaTime )
 	// 플레이어와의 거리 구하기
 	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
 	float Distance = GetDistanceTo(Character);
-	// 체력이 0 이상일 시 상태 변경
-	if (CurrentHp > 0.0f) {
-		// 공격 위치에 들어왔을 시
-		if (Distance <= AttackDistance && IsAttack())
-		{
-			BearState = EMyBearState::Attack;
-			SetAttack();
-		}
-		// 멀리 떨어졌을 시
-		else if (Distance > NearDistance) {
-			BearState = EMyBearState::Move;
-			StateWander(DeltaTime);
-		}
-		// 추격 위치에 들어왔을 시
-		else if (Distance < NearDistance)
-		{
-			BearState = EMyBearState::Move;
-			SetArrive(DeltaTime);
-		}
+
+	if (Weight > 0.0f)
+	{
+		BearState = EMyBearState::Move;
+		Weight -= DeltaTime;
+		StateWander(DeltaTime);
 	}
+	else if (Weight <= 0.0f)
+	{
+		BearState = EMyBearState::Idle;
+	}
+
+	// 체력이 0 이상일 시 상태 변경
+	//if (CurrentHp > 0.0f) {
+	//	// 공격 위치에 들어왔을 시
+	//	if (Distance <= AttackDistance && IsAttack())
+	//	{
+	//		BearState = EMyBearState::Attack;
+	//		SetAttack();
+	//	}
+	//	// 멀리 떨어졌을 시
+	//	else if (Distance > NearDistance) {
+	//		BearState = EMyBearState::Move;
+	//		StateWander(DeltaTime);
+	//	}
+	//	// 추격 위치에 들어왔을 시
+	//	else if (Distance < NearDistance)
+	//	{
+	//		BearState = EMyBearState::Move;
+	//		SetArrive(DeltaTime);
+	//	}
+	//}
 }
 
 UPawnMovementComponent * AMyEnemyBear::GetMovementComponent() const

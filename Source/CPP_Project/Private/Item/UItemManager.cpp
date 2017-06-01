@@ -32,20 +32,24 @@ void UUItemManager::AddInventoryList(TArray<FItemStruct> GetItemData)
 {
 	for (int32 i = 0; i < GetItemData.Num(); ++i) 
 	{
-		InventoryItem.Add(GetItemData[i]);
-		//for (int32 j = 0; j < InventoryItem.Num(); ++j)
-		//{
-		//	UE_LOG(LogClass, Warning, TEXT(" GET ITEM "));
-		//	if (InventoryItem[j].Name == GetItemData[i].Name)
-		//	{
-		//		InventoryItem[j].Amount += GetItemData[i].Amount;
-		//		break;
-		//	}
-		//	else
-		//	{
-		//		
-		//	}
-		//}
+		bool IsAddItem = false;
+		if (InventoryItem.Num() > 0) {
+			for (int32 j = 0; j <= InventoryItem.Num() - 1; ++j)
+			{
+				// 인벤토리에 같은 아이템이 있으면 수량만 증가
+				if (InventoryItem[j].Name == GetItemData[i].Name)
+				{
+					InventoryItem[j].Amount += GetItemData[i].Amount;
+					IsAddItem = true;
+					break;
+				}
+			}
+			if (!IsAddItem) { InventoryItem.Add(GetItemData[i]); }
+		}
+		else
+		{
+			InventoryItem.Add(GetItemData[i]);
+		}
 	}
 }
 
