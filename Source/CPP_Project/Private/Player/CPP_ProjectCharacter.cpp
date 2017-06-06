@@ -55,6 +55,7 @@ ACPP_ProjectCharacter::ACPP_ProjectCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = true;
 
+
 	// 캐릭터 스켈레탈 메쉬 설정
 	//Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh"));
 	//Mesh = GetMesh();
@@ -178,7 +179,11 @@ void ACPP_ProjectCharacter::MoveRight(float Value)
 void ACPP_ProjectCharacter::StartFire()
 {
 	if (IsFire) {
-		BasicWeapon->StartFire();
+		FVector CameraLocation;
+		FRotator CameraRotation;
+		GetActorEyesViewPoint(CameraLocation, CameraRotation);
+
+		BasicWeapon->StartFire(CameraLocation, CameraRotation);
 		AnimFire = true;
 		GetCharacterMovement()->MaxWalkSpeed = CrouchSpeed;
 	} else {
@@ -196,8 +201,11 @@ void ACPP_ProjectCharacter::StopFire()
 
 void ACPP_ProjectCharacter::OnReload()
 {
-	AnimReload = true;
-	BasicWeapon->SetWeaponState(EMyWeaponState::Reload);
+	if (BasicWeapon->GetCurrentAmmo() < BasicWeapon->MaxAmmo) {
+		AnimReload = true;
+		BasicWeapon->PlayReloadSound();
+		BasicWeapon->SetWeaponState(EMyWeaponState::Reload);
+	}
 }
 
 void ACPP_ProjectCharacter::OnCrouch()

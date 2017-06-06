@@ -35,7 +35,7 @@ protected:
 	// 설치 가능 여부
 	bool IsBuild;
 
-	// 메쉬 컴포넌트 - 자식 클래스에서도 사용 가능
+	// 메쉬 컴포넌트
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* Mesh;
 

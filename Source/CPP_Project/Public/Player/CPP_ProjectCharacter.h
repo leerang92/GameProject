@@ -62,6 +62,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool IsFire;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool IsHit;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UUItemManager* ItemManager;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -72,14 +74,15 @@ public:
 	UPROPERTY()
 	UWeapon* BasicWeapon;
 
+	UPROPERTY(BlueprintReadWrite)
+	FVector CameraLocation;
+	// 총구 소켓 이름
+	FName MuzzleSocketName;
+	UPROPERTY()
+	USkeletalMeshComponent* WeaponMesh;
 protected:
 
 	EPlayerState CurrentState;
-	
-	UPROPERTY()
-	USkeletalMeshComponent* WeaponMesh;
-	// 총구 소켓 이름
-	FName MuzzleSocketName;
 	// 재장전 대기 타이머 핸들
 	FTimerHandle ReloadTimer;
 	FTimerHandle BuildTimer;
@@ -132,6 +135,11 @@ public:
 
 	int GetCurrentAmmo() const { return BasicWeapon->GetCurrentAmmo(); }
 	int GetMaxAmmo() const { return BasicWeapon->MaxAmmo; }
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void GetDamage(float GetDamage) { 
+		CurrentHP -= GetDamage;
+		IsHit = true;
+	}
 
 };
 

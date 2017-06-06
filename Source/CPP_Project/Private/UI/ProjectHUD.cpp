@@ -76,6 +76,7 @@ void AProjectHUD::DrawCrosshair()
 		FVector2D Center(Canvas->ClipX * 0.474f, Canvas->ClipY * 0.3f);
 		FVector2D CrossHairPosition(Center.X - (CrossHair->GetSurfaceWidth() * 0.5f),
 			Center.Y - (CrossHair->GetSurfaceHeight() * 0.5f));
+		//FVector2D CrossHairPosition(Canvas->ClipX * 0.5f, Canvas->ClipY * 0.5f);
 		FCanvasTileItem TileItem(CrossHairPosition, CrossHair->Resource, FLinearColor::White);
 
 		TileItem.BlendMode = SE_BLEND_Translucent;

@@ -7,13 +7,15 @@
 
 /* 곰의 상태 열거형 */
 UENUM(BlueprintType)
-namespace EMyBearState
+namespace EBearState
 {
 	enum Type
 	{
 		Idle,
-		Move,
+		Wander,
+		Arrive,
 		Attack,
+		Hit,
 		Die,
 	};
 }
@@ -41,14 +43,13 @@ public:
 	/* 몸통 콜리더 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	class UCapsuleComponent* BodyColl;
+
 	/* 아웃라인 및 드랍 아이템 체크 콜러더 */
-	//UPROPERTY(EditDefaultsOnly)
-	//class USphereComponent* OutlineAreaColl;
 	UPROPERTY(EditAnywhere)
 	class USphereComponent* OutlineArea;
 
 	/* 이동 속도 및 회전 속도 */
-	UPROPERTY(EditAnywhere, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float MoveSpeed;
 	UPROPERTY(EditAnywhere, Category = Movement)
 	float LookSpeed;
@@ -72,15 +73,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float DestoryTime;
 
-	/* 상태 반환 함수 */
-	UFUNCTION(BlueprintCallable, Category = State)
-	EMyBearState::Type GetBearState() const;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Weight;
 protected:
 	/* 상태 */
-	EMyBearState::Type BearState;
+	EBearState::Type BearState;
 
 	float Angular;
 	float SetRot;
@@ -114,10 +111,20 @@ protected:
 	/* 오브젝트 삭제 */
 	void SetDestroy();
 
+	int GetRandomValue(const TArray<float>& Range);
+
 	UFUNCTION()
 	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnOutlineOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnOurlineOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+public:
+	/* 상태 반환 함수 */
+	UFUNCTION(BlueprintCallable, Category = "Bear State")
+	EBearState::Type GetBearState() const { return BearState; }
+
+	UFUNCTION(Blueprintcallable, Category = "Bear State")
+	void SetBearState(const EBearState::Type& GetState) { BearState = GetState; }
 };

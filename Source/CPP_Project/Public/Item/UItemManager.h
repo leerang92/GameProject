@@ -67,7 +67,7 @@ class CPP_PROJECT_API UUItemManager : public UObject
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	TArray<FItemStruct> GetInventoryItem() const;
 
-	/* 아이템의 수량을 삭감한다 */
+	/* 사용한 아이템의 수량을 삭감한다 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void MinusItemNumber(FItemStruct GetItem);
 	

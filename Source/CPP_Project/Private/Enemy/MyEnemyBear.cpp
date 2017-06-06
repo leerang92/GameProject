@@ -34,7 +34,7 @@ AMyEnemyBear::AMyEnemyBear()
 	NearDistance = 1400.0f;
 	FarDistance = 1500.0f;
 	AttackDistance = 200.0f;
-	BearState = EMyBearState::Idle;
+	BearState = EBearState::Idle;
 
 	Weight = 20.0f;
 
@@ -49,7 +49,8 @@ AMyEnemyBear::AMyEnemyBear()
 
 	// 아웃라인 및 드랍 가능 범위 컬리더 설정
 	OutlineArea = CreateDefaultSubobject<USphereComponent>(TEXT("Outline Area"));
-	OutlineArea->SetSphereRadius(300.0f);
+	// 300.0f
+	OutlineArea->SetSphereRadius(1000.0f);
 	OutlineArea->OnComponentBeginOverlap.AddDynamic(this, &AMyEnemyBear::OnOutlineOverlapBegin);
 	OutlineArea->OnComponentEndOverlap.AddDynamic(this, &AMyEnemyBear::OnOurlineOverlapEnd);
 	OutlineArea->SetupAttachment(RootComponent);
@@ -70,6 +71,7 @@ AMyEnemyBear::AMyEnemyBear()
 	// 무브먼트 설정
 	BearMoveComp = CreateDefaultSubobject<UBearMovementComponent>(TEXT("BearMovementComponent"));
 	BearMoveComp->UpdatedComponent = RootComponent;
+	BearState = EBearState::Wander;
 }
 
 void AMyEnemyBear::BeginPlay()
@@ -81,51 +83,30 @@ void AMyEnemyBear::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
 
-	// 플레이어와의 거리 구하기
-	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
-	float Distance = GetDistanceTo(Character);
-
-	if (Weight > 0.0f)
+	if (Weight <= 0.0f)
 	{
-		BearState = EMyBearState::Move;
+		MoveSpeed = 0.0f;
+		BearState = EBearState::Idle;
+	}
+
+	switch (BearState)
+	{
+	case EBearState::Wander:
 		Weight -= DeltaTime;
 		StateWander(DeltaTime);
+		break;
+	case EBearState::Arrive:
+		SetArrive(DeltaTime);
+		break;
+	case EBearState::Attack:
+		SetAttack();
+		break;
 	}
-	else if (Weight <= 0.0f)
-	{
-		BearState = EMyBearState::Idle;
-	}
-
-	// 체력이 0 이상일 시 상태 변경
-	//if (CurrentHp > 0.0f) {
-	//	// 공격 위치에 들어왔을 시
-	//	if (Distance <= AttackDistance && IsAttack())
-	//	{
-	//		BearState = EMyBearState::Attack;
-	//		SetAttack();
-	//	}
-	//	// 멀리 떨어졌을 시
-	//	else if (Distance > NearDistance) {
-	//		BearState = EMyBearState::Move;
-	//		StateWander(DeltaTime);
-	//	}
-	//	// 추격 위치에 들어왔을 시
-	//	else if (Distance < NearDistance)
-	//	{
-	//		BearState = EMyBearState::Move;
-	//		SetArrive(DeltaTime);
-	//	}
-	//}
 }
 
 UPawnMovementComponent * AMyEnemyBear::GetMovementComponent() const
 {
 	return BearMoveComp;
-}
-
-EMyBearState::Type AMyEnemyBear::GetBearState() const
-{
-	return BearState;
 }
 
 // 플레이어를 추격하여 이동
@@ -145,16 +126,30 @@ void AMyEnemyBear::SetArrive(float DeltaTime)
 	FVector TraceVec = SetTrace(Character->GetActorLocation());
 	LookAtTarget(TraceVec, DeltaTime);
 
-
-	/*FVector Dir = Character->GetActorLocation() - GetActorLocation();
-	Dir.Normalize();*/
+	const float Distance = GetDistanceTo(Character);
+	if (Distance < 200.0f)
+	{
+		MoveSpeed = 10.0f;
+	}
+	else
+	{
+		MoveSpeed = 300.0f;
+	}
 	// 정면으로 이동
 	BearMoveComp->AddInputVector(GetActorForwardVector() * MoveSpeed * DeltaTime);
+	if (Distance < 250.0f && IsAttack()) {
+		BearState = EBearState::Attack;
+	}
 }
 
 void AMyEnemyBear::SetAttack()
 {
-	UE_LOG(LogClass, Warning, TEXT("Attack!!"));
+	ACharacter* Character = UGameplayStatics::GetPlayerCharacter(GWorld, 0);
+
+	const float Distance = GetDistanceTo(Character);
+	if (!IsAttack() || Distance > 250.0f) {
+		BearState = EBearState::Arrive;
+	}
 }
 
 bool AMyEnemyBear::IsAttack()
@@ -263,10 +258,11 @@ FVector AMyEnemyBear::SetTrace(FVector TargetVec) const
 
 	FHitResult Hit;
 	if (GetWorld()->LineTraceSingleByChannel(Hit, LeftStart, LeftEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)) ||
-		GetWorld()->LineTraceSingleByChannel(Hit, RightStart, RightEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator)))
+		GetWorld()->LineTraceSingleByChannel(Hit, RightStart, RightEnd, ECollisionChannel::ECC_WorldDynamic, FCollisionQueryParams(TEXT("ProjClient"), true, Instigator))
+		&& Hit.GetActor()->GetName() != "Landscape_10")
 	{
 		// 트레이서 충돌 시 충돌 위치에 방향과 200.0f 의 값을 더하여 반환
-		TargetVec = Hit.ImpactPoint + Hit.Normal * 200.0f;
+		//TargetVec = Hit.ImpactPoint + Hit.Normal * 200.0f;
 		return TargetVec;
 	}
 	else
@@ -282,7 +278,8 @@ void AMyEnemyBear::AddDamage(const float Damage)
 	if (CurrentHp <= 0.0f)
 	{
 		// 상태 변경 및 콜리더 통과, 물리 제거
-		BearState = EMyBearState::Die;
+		BearState = EBearState::Die;
+		OutlineArea->SetSphereRadius(300.0f);
 		BodyColl->SetCollisionResponseToAllChannels(ECR_Ignore);
 		BodyColl->SetSimulatePhysics(false);
 		// 일정 시간 후 객체 소멸
@@ -295,15 +292,45 @@ void AMyEnemyBear::SetDestroy()
 	Destroy();
 }
 
+int AMyEnemyBear::GetRandomValue(const TArray<float>& Range)
+{
+	float Total = 0.0f;
+	for (int32 i = 0; i < Range.Num(); ++i)
+	{
+		Total += Range[i];
+	}
+	float RandPoint = FMath::SRand() * Total;
+	for (int32 i = 0; i < Range.Num(); ++i)
+	{
+		if (RandPoint < Range[i]) {
+			return i;
+		}
+		else {
+			RandPoint -= Range[i];
+		}
+	}
+	return Range.Num() - 1;
+}
+
 void AMyEnemyBear::OnOverlapBegin(UPrimitiveComponent * OverlappedComp, AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
 		// 죽음 상태가 아닐 때 발사체와 충돌시 체력 감소
-		if (OtherComp->GetName() == "ProjectileCollision" && BearState != EMyBearState::Die)
+		if (OtherComp->GetName() == "ProjectileCollision" && BearState != EBearState::Die)
 		{
 			AAProjectile* Projectile = Cast<AAProjectile>(OtherActor);
-			AddDamage(Projectile->Damage);
+			if (Projectile) {
+				AddDamage(Projectile->Damage);
+
+				// 피격 애니메이션을 재생할 확률
+				const TArray<float> RandValue = { 20, 80 };
+				int Rand = GetRandomValue(RandValue);
+				if (Rand == 0)
+				{
+					BearState = EBearState::Hit;
+				}
+			}
 		}
 	}
 }
@@ -313,10 +340,16 @@ void AMyEnemyBear::OnOutlineOverlapBegin(UPrimitiveComponent * OverlappedComp, A
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
 		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OtherActor);
-		if (BearState == EMyBearState::Die && Character)
-		{
-			Character->IsDrop = true;
-			SkeletalMesh->SetRenderCustomDepth(true);
+		if (Character) {
+			if (BearState == EBearState::Die)
+			{
+				Character->IsDrop = true;
+				SkeletalMesh->SetRenderCustomDepth(true);
+			}
+			else
+			{
+				BearState = EBearState::Arrive;
+			}
 		}
 	}
 }
@@ -326,7 +359,7 @@ void AMyEnemyBear::OnOurlineOverlapEnd(UPrimitiveComponent * OverlappedComp, AAc
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
 		ACPP_ProjectCharacter* Character = Cast<ACPP_ProjectCharacter>(OtherActor);
-		if (BearState == EMyBearState::Die && Character)
+		if (BearState == EBearState::Die && Character)
 		{
 			Character->IsDrop = false;
 			SkeletalMesh->SetRenderCustomDepth(false);

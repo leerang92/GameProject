@@ -30,9 +30,10 @@ public:
 	void Initialize(APawn* pOwnerPawn, AActor* GetHUD);
 	void UpdateWeapon(float DeltaSeconds);
 	void ShotProjectile();
-	void StartFire();
+	void StartFire(FVector GetCamLocation, FRotator GetCamRotation);
 	void StopFire();
 	void StartReload();
+	void PlayReloadSound();
 	EMyWeaponState::Type GetWeaponState() const;
 	void SetWeaponState(EMyWeaponState::Type GetState);
 
@@ -40,6 +41,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon")
 	int MaxAmmo;
+
 
 protected:
 	int CurrentAmmo;
@@ -53,4 +55,22 @@ protected:
 	APawn* OwnerPawn;
 	UPROPERTY()
 	AProjectHUD* HUD;
+	UPROPERTY()
+	UAudioComponent* FireAC;
+
+	UPROPERTY()
+	USoundCue* FireLoopSound;
+	UPROPERTY()
+	USoundCue* FinishFireSound;
+	UPROPERTY()
+	USoundCue* ReloadSound;
+	UPROPERTY()
+	UParticleSystem* MuzzleFX;
+	UPROPERTY()
+	UParticleSystemComponent* FireFX;
+
+	FVector CameraLocation;
+	FRotator CameraRotation;
+
+	UAudioComponent* PlaySound(USoundCue* GetSound);
 };

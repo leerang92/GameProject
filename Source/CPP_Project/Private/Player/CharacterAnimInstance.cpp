@@ -12,5 +12,3 @@ void UCharacterAnimInstance::AnimNotify_ReloadEnd(UAnimNotify * Notify)
 		Character->BasicWeapon->StartReload();
 	}
 }
-
-

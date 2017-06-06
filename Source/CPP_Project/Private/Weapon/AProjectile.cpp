@@ -21,11 +21,11 @@ AAProjectile::AAProjectile()
 	SphereCol->OnComponentBeginOverlap.AddDynamic(this, &AAProjectile::OnOverlapBegin);
 	RootComponent = SphereCol;
 
-	ConstructorHelpers::FObjectFinder<UStaticMesh> FOProjectileMesh(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere'"));
+	/*ConstructorHelpers::FObjectFinder<UStaticMesh> FOProjectileMesh(TEXT("StaticMesh'/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere'"));
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMeshComp"));
 	ProjectileMesh->SetStaticMesh(FOProjectileMesh.Object);
 	ProjectileMesh->SetRelativeScale3D(FVector(0.05f, 0.05f, 0.05f));
-	ProjectileMesh->SetupAttachment(SphereCol);
+	ProjectileMesh->SetupAttachment(SphereCol);*/
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->SetUpdatedComponent(SphereCol);
